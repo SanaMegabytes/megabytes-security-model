@@ -265,6 +265,7 @@ This provides **early practical finality** while preserving PoW decentralization
 | d < 3       | No V2 veto                | Decided by PoW + Finality V1              | Honest reorg window |
 | 3 ≤ d < 5   | DAG isolation only        | Reject if isolated                         | Blocks private forks |
 | d ≥ 5       | Isolation + score checks  | Reject if isolated or Score < MinScore     | Requires strong attacker |
+| d ≥ 20      | Finality V1 work-lead rule          | Reject unless Work(new) ≥ Work(old) + 20      | Deep reorgs ≥20 blocks effectively impossible |
 
 ---
 
