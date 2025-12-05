@@ -143,6 +143,8 @@ because **Finality V2 blocks them first**:
 Finality V1 therefore acts as a **secondary safety net**,  
 but **Finality V2 is the effective mechanism preventing deep reorganizations** under realistic assumptions.
 
+---
+
 
 ## 4. Parameters (example configuration)
 
