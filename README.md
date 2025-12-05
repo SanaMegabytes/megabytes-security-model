@@ -259,7 +259,7 @@ This provides **early practical finality** while preserving PoW decentralization
 
 ## 7. Conditions of Veto
 
-| Reorg depth | V2 checks                 | Outcome                                   | Notes |
+| Reorg depth | V1 - V2 checks                 | Outcome                                   | Notes |
 |-------------|---------------------------|--------------------------------------------|-------|
 | MHIS          | Always evaluated (all depths)    | Reject if MHIS window not satisfied         | Prevents long-range or history-divergent chains |
 | d < 3       | No V2 veto                | Decided by PoW + Finality V1              | Honest reorg window |
