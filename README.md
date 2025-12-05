@@ -8,6 +8,49 @@ global hashrate *across multiple algorithms simultaneously*.
 
 **Simulations indicate that an attacker without ~80–90% of multi-algo hashrate cannot reliably perform reorgs ≥ 3 blocks.**
 
+---
+
+```mermaid
+%%{init: {'theme':'default'}}%%
+flowchart TD
+
+
+    A[New competing chain detected] --> M{MHIS check}
+    M -->|fail| R1[Reject: bad-reorg-mhis]
+    M -->|pass| B{Reorg depth d}
+    B -->|d < 3| F[No V2 veto → Evaluate with Finality V1]
+    B -->|d ≥ 3| C{DAG isolation check}
+
+    C -->|isolated| Z[Reject: bad-reorg-isolated-dag]
+    C -->|not isolated| D{d ≥ MinDepthScore?}
+
+    D -->|no| F
+    D -->|yes| E[Compute R_work, R_blue, R_dac, R_algo and Score]
+
+    E -->|Score < MinScore| Y[Reject: bad-reorg-low-score]
+    E -->|Score ≥ MinScore| F
+
+    F --> H{Finality V1 checks}
+    H -->|fail| R2[Reject: bad-reorg-finalized]
+    H -->|pass| G[Reorg accepted]
+
+
+    %% === COLORS ===
+    classDef danger fill:#ffcccc,stroke:#cc0000,stroke-width:2px;
+    classDef warn fill:#fff3cd,stroke:#d39e00,stroke-width:1px;
+    classDef safe fill:#d4edda,stroke:#155724,stroke-width:1px;
+    classDef step fill:#cce5ff,stroke:#004085,stroke-width:1px;
+
+    %% Apply colors
+    class M,C,D,E,H step;
+    class R1,R2,Y,Z danger;
+    class G safe;
+    class F warn;
+
+```
+
+---
+
 This repository documents:
 
 - The **threat model**;
@@ -207,49 +250,10 @@ These face multiple barriers:
 
 This provides **early practical finality** while preserving PoW decentralization.
 
----
 
 
-## 6. Finality Decision Flow (V1 + V2)
-
-```mermaid
-%%{init: {'theme':'default'}}%%
-flowchart TD
 
 
-    A[New competing chain detected] --> M{MHIS check}
-    M -->|fail| R1[Reject: bad-reorg-mhis]
-    M -->|pass| B{Reorg depth d}
-    B -->|d < 3| F[No V2 veto → Evaluate with Finality V1]
-    B -->|d ≥ 3| C{DAG isolation check}
-
-    C -->|isolated| Z[Reject: bad-reorg-isolated-dag]
-    C -->|not isolated| D{d ≥ MinDepthScore?}
-
-    D -->|no| F
-    D -->|yes| E[Compute R_work, R_blue, R_dac, R_algo and Score]
-
-    E -->|Score < MinScore| Y[Reject: bad-reorg-low-score]
-    E -->|Score ≥ MinScore| F
-
-    F --> H{Finality V1 checks}
-    H -->|fail| R2[Reject: bad-reorg-finalized]
-    H -->|pass| G[Reorg accepted]
-
-
-    %% === COLORS ===
-    classDef danger fill:#ffcccc,stroke:#cc0000,stroke-width:2px;
-    classDef warn fill:#fff3cd,stroke:#d39e00,stroke-width:1px;
-    classDef safe fill:#d4edda,stroke:#155724,stroke-width:1px;
-    classDef step fill:#cce5ff,stroke:#004085,stroke-width:1px;
-
-    %% Apply colors
-    class M,C,D,E,H step;
-    class R1,R2,Y,Z danger;
-    class G safe;
-    class F warn;
-
-```
 
 ---
 
