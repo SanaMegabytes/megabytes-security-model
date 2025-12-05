@@ -18,11 +18,11 @@ flowchart TD
     A[New competing chain detected] --> M{MHIS check}
     M -->|fail| R1[Reject: bad-reorg-mhis]
     M -->|pass| B{Reorg depth d}
-    B -->|d < 3| F[No V2 veto → Evaluate with Finality V1]
-    B -->|d ≥ 3| C{DAG isolation check}
+    B --> C{DAG isolation check}
 
-    C -->|isolated| Z[Reject: bad-reorg-isolated-dag]
-    C -->|not isolated| D{d ≥ MinDepthScore?}
+    C -->|d < 3| F[Skip V2 veto → Normal DAG logic → Finality V1]
+    C -->|isolated & d ≥ 3| Z[Reject: bad-reorg-isolated-dag]
+    C -->|not isolated & d ≥ 3| D{d ≥ MinDepthScore?}
 
     D -->|no| F
     D -->|yes| E[Compute R_work, R_blue, R_dac, R_algo and Score]
