@@ -215,8 +215,9 @@ This provides **early practical finality** while preserving PoW decentralization
 ```mermaid
 
 flowchart TD
-    A[New competing chain detected] --> B{Reorg depth d}
-
+    A[New competing chain detected] --> M{MHIS check}
+    M -->|fail| R1[Reject: bad-reorg-mhis]
+    M -->|pass| B{Reorg depth d}
     B -->|d < 3| F[No V2 veto → Evaluate with Finality V1]
     B -->|d ≥ 3| C{DAG isolation check}
 
@@ -229,7 +230,21 @@ flowchart TD
     E -->|Score < MinScore| Y[Reject: bad-reorg-low-score]
     E -->|Score ≥ MinScore| F
 
-    F --> G[Apply Finality V1]
+    F --> H{Finality V1 checks}
+    H -->|fail| R2[Reject: bad-reorg-finalized]
+    H -->|pass| G[Reorg accepted]
+
+    %% === COLORS ===
+    classDef danger fill:#ffcccc,stroke:#cc0000,stroke-width:2px;
+    classDef warn fill:#fff3cd,stroke:#d39e00,stroke-width:1px;
+    classDef safe fill:#d4edda,stroke:#155724,stroke-width:1px;
+    classDef step fill:#cce5ff,stroke:#004085,stroke-width:1px;
+
+    %% Apply colors
+    class M,C,D,E,H step;
+    class R1,R2,Y,Z danger;
+    class G safe;
+    class F warn;
 
 ```
 
@@ -239,6 +254,7 @@ flowchart TD
 
 | Reorg depth | V2 checks                 | Outcome                                   | Notes |
 |-------------|---------------------------|--------------------------------------------|-------|
+| MHIS          | Always evaluated (all depths)    | Reject if MHIS window not satisfied         | Prevents long-range or history-divergent chains |
 | d < 3       | No V2 veto                | Decided by PoW + Finality V1              | Honest reorg window |
 | 3 ≤ d < 5   | DAG isolation only        | Reject if isolated                         | Blocks private forks |
 | d ≥ 5       | Isolation + score checks  | Reject if isolated or Score < MinScore     | Requires strong attacker |
