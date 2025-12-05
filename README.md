@@ -129,6 +129,21 @@ attacks that slip past the previous one:
 
 ---
 
+### Finality V1 vs Finality V2 (Practical Role)
+
+Megabytes still includes the traditional Finality V1 layer  
+(blue-finality + work-finality), inherited from the underlying chain.
+
+In practice, however, deep reorg attempts never reach Finality V1 anymore,  
+because **Finality V2 blocks them first**:
+
+- **Depth ≥ 3** → isolated-DAG check (**hard veto**)  
+- **Depth ≥ 5** → score threshold (**bad-reorg-low-score**)  
+
+Finality V1 therefore acts as a **secondary safety net**,  
+but **Finality V2 is the effective mechanism preventing deep reorganizations** under realistic assumptions.
+
+
 ## 4. Parameters (example configuration)
 
 ```cpp
