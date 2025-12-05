@@ -167,15 +167,18 @@ nFinalityV2MinDepthScore  = 5;
 dFinalityV2MinScore       = 0.5;
  ```
 
-### In words
+## Interpretation of parameters
 
-- **Reorgs deeper than 2 blocks are suspicious by default.**
+- Reorgs deeper than 2 blocks are treated as suspicious.  
+- For depth ≥ 3, DAG isolation may immediately veto the reorg.  
+- For depth ≥ 5, the score threshold must be met.  
+- A deep reorg must therefore be:
+  - DAG-connected  
+  - Work-dominant  
+  - Realistic in algorithm distribution  
+  - High-quality in all R_* metrics  
 
-- **For depth ≥ 3:**
-  - If the new chain is **DAG-isolated**, it is rejected immediately.
-
-- **For depth ≥ 5:**
-  - If the **global score < 0.5**, the reorg is rejected (`bad-reorg-low-score`).
+Without these, the reorg is rejected by V2.
 
 ---
 
@@ -205,6 +208,44 @@ These face multiple barriers:
 This provides **early practical finality** while preserving PoW decentralization.
 
 ---
+
+
+## 6. Finality Decision Flow (V1 + V2)
+
+```mermaid
+
+flowchart TD
+    A[New competing chain detected] --> B{Reorg depth d}
+
+    B -->|d < 3| F[No V2 veto → Evaluate with Finality V1]
+    B -->|d ≥ 3| C{DAG isolation check}
+
+    C -->|isolated| Z[Reject: bad-reorg-isolated-dag]
+    C -->|not isolated| D{d ≥ MinDepthScore?}
+
+    D -->|no| F
+    D -->|yes| E[Compute R_work, R_blue, R_dac, R_algo and Score]
+
+    E -->|Score < MinScore| Y[Reject: bad-reorg-low-score]
+    E -->|Score ≥ MinScore| F
+
+    F --> G[Apply Finality V1]
+
+```
+
+---
+
+## 7. Conditions of Veto
+
+| Reorg depth | V2 checks                 | Outcome                                   | Notes |
+|-------------|---------------------------|--------------------------------------------|-------|
+| d < 3       | No V2 veto                | Decided by PoW + Finality V1              | Honest reorg window |
+| 3 ≤ d < 5   | DAG isolation only        | Reject if isolated                         | Blocks private forks |
+| d ≥ 5       | Isolation + score checks  | Reject if isolated or Score < MinScore     | Requires strong attacker |
+
+---
+
+
 
 ### 6. Regtest simulations (reproducible)
 
