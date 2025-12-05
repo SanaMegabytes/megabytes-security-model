@@ -213,8 +213,10 @@ This provides **early practical finality** while preserving PoW decentralization
 ## 6. Finality Decision Flow (V1 + V2)
 
 ```mermaid
-
+%%{init: {'theme':'default'}}%%
 flowchart TD
+
+
     A[New competing chain detected] --> M{MHIS check}
     M -->|fail| R1[Reject: bad-reorg-mhis]
     M -->|pass| B{Reorg depth d}
@@ -233,6 +235,7 @@ flowchart TD
     F --> H{Finality V1 checks}
     H -->|fail| R2[Reject: bad-reorg-finalized]
     H -->|pass| G[Reorg accepted]
+
 
     %% === COLORS ===
     classDef danger fill:#ffcccc,stroke:#cc0000,stroke-width:2px;
