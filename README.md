@@ -20,15 +20,16 @@ flowchart TD
     M -->|pass| B{Reorg depth d}
     B --> C{DAG isolation check}
 
-    C -->|d < 3| F[Skip V2 veto → Normal DAG logic → Finality V1]
+
     C -->|isolated & d ≥ 3| Z[Reject: bad-reorg-isolated-dag]
     C -->|not isolated & d ≥ 3| D{d ≥ MinDepthScore?}
 
-    D -->|no| F
+    
     D -->|yes| E[Compute R_work, R_blue, R_dac, R_algo and Score]
+    D -->|no| F
 
     E -->|Score < MinScore| Y[Reject: bad-reorg-low-score]
-    E -->|Score ≥ MinScore| F
+    E -->|Score ≥ MinScore| F[Finality V2 done]
 
     F --> H{Finality V1 checks}
     H -->|fail| R2[Reject: bad-reorg-finalized]
