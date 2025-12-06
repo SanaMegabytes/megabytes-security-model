@@ -173,6 +173,86 @@ attacks that slip past the previous one:
 
 ---
 
+## 4. MHIS: Multi-Height Interval Safety
+
+MHIS (Multi-Height Interval Safety) is the **first protective layer** in Megabytes’ reorganization pipeline.
+
+It guarantees that any competing chain must remain consistent with the recent honest mining history, preventing long-range and structurally invalid reorganizations.
+
+The MHIS layer contains several key components:
+
+
+1. **History Window Constraint**
+
+   - MHIS inspects the last *W* blocks behind the current height (≈20 by default).
+   - Any reorg whose fork point occurs earlier than **H − W** is rejected immediately.
+   - This prevents long-range attacks and deeply pre-mined side-chains.
+
+2. **Structural Continuity Requirement**
+
+   - The competing chain must maintain valid:
+     - timestamps,
+     - inter-block intervals,
+     - parent relationships,
+     - and historical continuity.
+   - If the divergence is too early, compressed, or inconsistent:
+     - **MHIS rejects the reorg before Finality V2 or V1 are evaluated.**
+
+3. **Independence from Work or DAG Quality**
+
+   - MHIS does **not** rely on:
+     - accumulated work,
+     - GhostDAG mergeset structure,
+     - algorithm distribution,
+     - or score-based evaluation.
+   - Even a chain with more PoW or a clean DAG cannot bypass MHIS if its fork lies outside the window.
+
+
+
+4. **Protection Against Long-Range Attacks**
+
+   - An attacker cannot mine tens or hundreds of blocks privately and publish them later.
+   - Forks outside the history window are automatically invalid.
+
+
+
+5. **Protection Against Deep Private Side-Chains**
+
+   - Private chains of 15–20 blocks inevitably cause:
+     - timestamp drift,
+     - parent mismatches,
+     - or compressed historical patterns.
+   - MHIS detects these anomalies and rejects the reorg.
+
+
+6. **Prevention of Finality V1 Bypass**
+
+   - Finality V1 normally requires the attacker to provide significant work advantage.
+   - MHIS eliminates deep reorg attempts **before** the work comparison is even applied.
+   - Reorgs deeper than the window (≈20 blocks) are **unconditionally forbidden**.
+
+
+### **Summary**
+
+- **MHIS enforces temporal proximity**  
+  → Only short, recent reorgs are possible candidates.
+
+- **Finality V2 enforces structural and behavioral legitimacy**  
+  → DAG isolation, score veto, multi-algo distribution, DAC coherence.
+
+- **Finality V1 enforces economic weight**  
+  → Work-lead rule and blue-finality consistency.
+
+Together, these layers make Megabytes highly resilient to:
+
+- long-range attacks,  
+- private mining attacks,  
+- deep reorganizations,  
+- multi-algo manipulation,  
+- and historically inconsistent forks.
+
+---
+
 ### Finality V1 vs Finality V2 (Practical Role)
 
 Megabytes still includes the traditional Finality V1 layer  
@@ -190,7 +270,7 @@ but **Finality V2 is the effective mechanism preventing deep reorganizations** u
 ---
 
 
-## 4. Parameters (example configuration)
+## 5. Parameters (example configuration)
 
 ```cpp
 nFinalityV2MaxDepth       = 100;
@@ -226,7 +306,7 @@ Without these, the reorg is rejected by V2.
 
 ---
 
-### 5. Attacker window (≈ 2 blocks)
+### 6. Attacker window (≈ 2 blocks)
 
 With these parameters:
 
@@ -272,7 +352,7 @@ This provides **early practical finality** while preserving PoW decentralization
 
 
 
-### 6. Regtest simulations (reproducible)
+### 8. Regtest simulations (reproducible)
 
 Scripts in the `scripts/` directory allow anyone to verify Megabytes’ security assumptions:
 
@@ -298,7 +378,7 @@ Each script prints **FinalityV2-\*** log lines and explains how to interpret the
 
 ---
 
-### 7. Future improvements
+### 9. Future improvements
 
 Areas under active research:
 
