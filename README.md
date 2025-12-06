@@ -415,30 +415,83 @@ This provides **early practical finality** while preserving PoW decentralization
 
 
 
-### 8. Regtest simulations (reproducible)
+## 8. Regtest simulations (reproducible)
 
-Scripts in the `scripts/` directory allow anyone to verify Megabytes’ security assumptions:
+Scripts in the `scripts/` directory allow anyone to reproduce and validate
+Megabytes’ security assumptions on `regtest`.
 
-- **regtest_reorg_honest_2blocks.sh**  
-  Simulates a small honest 1–2 block reorg.  
-  **Expected:** *ACCEPTED by FinalityV1 + FinalityV2.*
+Each script targets a specific scenario:
 
-- **regtest_attack_mono_algo_25blocks.sh**  
-  Simulates a deep mono-algo attack.  
-  **Expected:**  
-  - **Isolated-DAG veto**, or  
-  - **Score < MinScore**, leading to `bad-reorg-low-score`.
 
-- **regtest_attack_multi_algo_biased.sh**  
-  A subtle attack using an unrealistic algorithm distribution.  
-  **Expected:** rejected unless the attacker controls overwhelming multi-algo hashrate.
+1. **`regtest_reorg_HONEST_2blocks.sh`**
 
-- **regtest_reorg_isolated_dag_example.sh**  
-  Demonstrates how a branch mined even partially offline becomes **isolated**  
-  and is correctly rejected.
+   Simulates a small, honest 2-block reorg between two nodes.
 
-Each script prints **FinalityV2-\*** log lines and explains how to interpret them.
+   - Node1 and Node2 both mine on the honest chain.
+   - A shallow fork is created and extended with a realistic multi-algo mix.
+   - The new branch has:
+     - higher or comparable work,
+     - a clean DAG structure,
+     - an algorithm distribution similar to the honest chain.
 
+   **Expected outcome**
+
+   - No `FinalityV2-isolation` (DAG is not isolated).
+   - `FinalityV2-shadow` shows:
+     - `R_algo ≈ 0` (no mono-algo bias),
+     - `R_work > 0`,
+     - `Score >= MinScore`.
+   - Reorg is **ACCEPTED** by FinalityV2, then by FinalityV1.
+
+
+2. **`regtest_attack_algo_multi_trigger_DAG_isolate.sh`**
+
+   Simulates a more aggressive attack where the attacker mines a private branch
+   with a biased multi-algo distribution that becomes **DAG-isolated**.
+
+   - Honest chain is mined with a normal multi-algo mix.
+   - Node2 disconnects and mines an attack chain mostly in private.
+   - From the point of view of Node1, the new branch is poorly connected
+     to the global DAG (low DAC, effectively isolated).
+
+   **Expected outcome**
+
+   - `FinalityV2-isolation` detects an isolated DAG:
+     - `dac_new` very low / near zero,
+     - immediate hard veto.
+   - Reorg is **REJECTED** with:
+     - `bad-reorg-isolated-dag`.
+   - Score / R_algo are not needed here: isolation is sufficient to block.
+
+
+3. **`regtest_attack_algo_mono_trigger_MINSCORE_r_lago.sh`**
+
+   Simulates a **shallow mono-algo attack** that stays embedded enough in the DAG
+   to avoid an isolation veto, but is penalized by the score and `R_algo`.
+
+   - Honest chain is mined with a balanced multi-algo mix.
+   - A short fork is created near the tip (shallow depth).
+   - Node2 mines the competing branch using **only one algorithm** (e.g. 100% `sha256d`).
+   - The branch is still connected to the overall DAG (no isolated-DAG),  
+     but its algo distribution is clearly abnormal.
+
+   **Expected outcome**
+
+   - No `bad-reorg-isolated-dag` (DAG not considered isolated in this scenario).
+   - `FinalityV2-shadow` logs:
+     - a strongly negative `R_algo`,
+     - combined with other terms leading to `Score < MinScore`.
+   - `FinalityV2-score-veto` triggers:
+     - **`bad-reorg-low-score`** (score-based veto).
+   - Reorg is **REJECTED** even though it is shallow and not DAG-isolated.
+
+
+All scripts are designed to:
+
+- produce explicit `FinalityV2-*` log lines (`isolation`, `shadow`, `score-veto`),
+- illustrate how different layers (MHIS, isolation, R_algo, score, FinalityV1)
+  interact to accept honest reorgs while rejecting malicious ones.
+  
 ---
 
 ### 9. Future improvements
