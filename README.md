@@ -8,6 +8,8 @@ global hashrate *across multiple algorithms simultaneously*.
 
 **Simulations indicate that an attacker without ~80–90% of multi-algo hashrate cannot reliably perform reorgs ≥ 3 blocks.**
 
+**Beyond 20 blocks, the Megabytes chain is immutable. No reorganization can ever override finalized history.**
+
 ---
 
 ```mermaid
