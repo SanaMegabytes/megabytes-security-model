@@ -253,24 +253,87 @@ Together, these layers make Megabytes highly resilient to:
 
 ---
 
-### Finality V1 vs Finality V2 (Practical Role)
+## 5. Finality V1 vs Finality V2 (Practical Role)
 
-Megabytes still includes the traditional Finality V1 layer  
-(blue-finality + work-finality), inherited from the underlying chain.
+Megabytes maintains two complementary finality layers:
 
-In practice, however, deep reorg attempts never reach Finality V1 anymore,  
-because **Finality V2 blocks them first**:
+- **Finality V1**, inherited from the underlying chain (blue-finality + work-finality),
+- **Finality V2**, a new structural and behavioral veto model built on DAG analysis.
 
-- **Depth ≥ 3** → isolated-DAG check (**hard veto**)  
-- **Depth ≥ 5** → score threshold (**bad-reorg-low-score**)  
+Although both layers remain active, their practical roles differ significantly.
+Finality V2 typically intercepts deep or malicious reorganizations
+*before* Finality V1 ever needs to evaluate them.
 
-Finality V1 therefore acts as a **secondary safety net**,  
-but **Finality V2 is the effective mechanism preventing deep reorganizations** under realistic assumptions.
+The interaction between the two layers can be summarized as follows:
+
+
+5.1 **Finality V1: Economic and Blue Finality**
+
+   - Evaluates whether a competing chain presents **significantly more accumulated work**.
+   - Enforces **blue-finality**, preventing reorgs past finalized blue blocks.
+   - Historically essential in PoW chains to prevent deep reorganizations.
+   - Acts as the **final arbiter** when V2 places no veto.
+
+
+5.2 **Finality V2: Structural and Behavioral Finality**
+
+   Finality V2 applies a series of veto conditions based on
+   DAG structure, connectivity, and algorithm behavior.
+
+   Megabytes uses two key thresholds:
+
+   - **Depth ≥ 3 → Isolated-DAG Check (Hard Veto)**
+     - If the competing branch is DAG-isolated (e.g., privately mined or poorly connected),
+       the reorg is rejected unconditionally.
+
+   - **Depth ≥ `nFinalityV2MinDepthScore` (typically 3) → Score Threshold**
+     - The new chain must satisfy:
+       ```
+       Score >= MinScore
+       ```
+       where the score aggregates:
+       - work advantage,
+       - blue-score coherence,
+       - DAG connectivity quality,
+       - and multi-algorithm distribution similarity.
+
+     - Chains that are too mono-algo, structurally weak, or poorly integrated
+       with the honest mining graph are rejected.
+
+
+5.3 **Why Finality V2 Usually Acts First**
+
+   - Reorgs deeper than **2 blocks** almost always trigger V2’s isolation or scoring logic.
+   - If a reorg is suspicious structurally (isolated DAG) or behaviorally (bad algo mix),
+     V2 rejects it before Finality V1 evaluates work.
+   - As a result, **deep reorg attempts almost never reach Finality V1** in practice.
+
+
+5.4 **Finality V1 as a Secondary Safety Net**
+
+   - Finality V1 still guards the system, but functions primarily as a **backup layer**.
+   - If a candidate chain passes all V2 checks but still lacks the work or blue chain legitimacy,
+     Finality V1 rejects it.
+   - This layered approach ensures that both **economic weight** and **structural legitimacy**
+     are required for history rewrites.
+
+5.5 **Practical Summary**
+
+   - **Finality V2 stops malicious or structurally abnormal reorgs early.**
+   - **Finality V1 stops insufficient-work reorgs that pass V2.**
+   - Together, they ensure:
+     - deep reorganizations are practically impossible,
+     - privately mined forks cannot override honest history,
+     - multi-algorithm manipulation is penalized,
+     - and work-finality remains intact as a final guarantee.
+
+In practice, **Finality V2 is the effective barrier** for preventing deep chain reorganization,
+while **Finality V1 acts as a final, economic-based safeguard**.
 
 ---
 
 
-## 5. Parameters (example configuration)
+## 6. Parameters (example configuration)
 
 ```cpp
 nFinalityV2MaxDepth       = 100;
@@ -306,7 +369,7 @@ Without these, the reorg is rejected by V2.
 
 ---
 
-### 6. Attacker window (≈ 2 blocks)
+### Attacker window (≈ 2 blocks)
 
 With these parameters:
 
