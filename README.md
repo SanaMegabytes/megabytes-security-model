@@ -469,11 +469,23 @@ Each script targets a specific scenario:
    Simulates a **shallow mono-algo attack** that stays embedded enough in the DAG
    to avoid an isolation veto, but is penalized by the score and `R_algo`.
 
-   - Honest chain is mined with a balanced multi-algo mix.
-   - A short fork is created near the tip (shallow depth).
-   - Node2 mines the competing branch using **only one algorithm** (e.g. 100% `sha256d`).
-   - The branch is still connected to the overall DAG (no isolated-DAG),  
-     but its algo distribution is clearly abnormal.
+   - The honest chain is mined with a balanced multi-algorithm mix.
+   - A short fork is created close to the tip (shallow reorg depth).
+   - Node2 then mines the attacker branch using **only one algorithm**  
+     (e.g., 100% `sha256d`).
+
+   The branch remains structurally connected to the DAG (so it does *not* trigger
+   `isolated-DAG`), **but its algorithm distribution is statistically abnormal**.
+
+   Importantly:
+
+   > Even if the attacker uses several algorithms in a *random* or *biased* pattern,  
+   > the distribution must still resemble the honest chain’s stochastic behavior  
+   > to be considered legitimate.
+
+   A branch whose algo mix diverges too far from the honest chain  
+   (e.g., mono-algo, 95% bias, unrealistic proportions, etc.)  
+   will produce a strongly negative `R_algo`.
 
    **Expected outcome**
 
