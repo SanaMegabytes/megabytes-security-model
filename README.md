@@ -28,8 +28,8 @@ flowchart TD
     C -->|isolated| Z[Reject: bad-reorg-isolated-dag]
     C -->|not isolated| D{d ≥ MinDepthScore?}
 
-    D -->|yes| E
-    D -->|no| F[Skip V2 veto → Finality V1]
+    D --> |yes| E
+    D --> |no| F
 
     E -->|Score < MinScore| Y[Reject: bad-reorg-low-score]
     E -->|Score ≥ MinScore| F[Finality V2 done]
