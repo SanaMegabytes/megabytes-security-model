@@ -339,22 +339,136 @@ while **Finality V1 acts as a final, economic-based safeguard**.
 ## 6. Parameters (example configuration)
 
 ```cpp
-nFinalityV2MaxDepth       = 100;
-nFinalityV2MaxWindow      = 400;
+// ============================================================================
+// REORG / FINALITY POLICY (MAINNET) — Megabytes DAG
+//
+// Depth legend (height-based reorg depth):
+//
+//   depth (blocks):  0   1   2 | 3 | 4 .............. 20 | 21+
+//                    -----------+---+--------------------+------->
+//
+//   - depth < nReorgMicroBypassDepth (3):
+//       Network noise zone. Skip heuristics / “style” checks.
+//       Allow quick convergence during near-simultaneous blocks.
+//
+//   - depth >= nFinalityV2MinDepthScore (4) and <= nMaxReorgHeightHard (20):
+//       Apply FinalityV2 SOFT-VETO score (work + blue-steps + DAG connectivity + algo JSD).
+//       This DOES NOT mark blocks consensus-invalid; it simply “skips” suspicious candidates.
+//
+//   - depth > nMaxReorgHeightHard (20):
+//       HARD BATON (consensus-invalid). No reorg beyond this depth, ever.
+// ============================================================================
 
-dFinalityV2KWork          = 0.10;
-dFinalityV2KBlue          = 0.20;
-dFinalityV2UnitWork       = 1.0;
 
-dFinalityV2KDAC           = 2.0;
-nFinalityV2DACMinDepth    = 3;
-dFinalityV2DACEps         = 1e-6;
+// ============================================================================
+// HARD / SOFT REORG LIMITS (HEIGHT-BASED)
+// ============================================================================
 
-dFinalityV2KAlgo          = 3.0;
-dFinalityV2AlgoEps        = 1e-3;
+// Hard baton: impossible to reorg beyond this depth (height-based, ALWAYS enforced).
+// Rationale: deterministic, DB-independent, prevents long-range chain splits.
+consensus.nMaxReorgHeightHard      = 20;
 
-nFinalityV2MinDepthScore  = 5;
-dFinalityV2MinScore       = 0.5;
+// Micro-bypass: ignore finality heuristics below this depth (height-based).
+// Rationale: tolerate benign micro-reorgs due to propagation and near-simultaneous blocks.
+consensus.nReorgMicroBypassDepth   = 3;
+
+
+// ============================================================================
+// FINALITY V1 (STRUCTURAL) — STEP-BASED (Selected-Parent “BlueSteps”)
+// ============================================================================
+//
+// NOTE:
+// - These are STEP-based rules (nBlueSteps), not height-based.
+// - Keeping them at 20 for now is fine, but they can overlap with the hard baton.
+// - Steps are monotone (+1 per selected-parent block), so they behave like “effective blocks”.
+//
+// Steps sketch (example):
+//   tipSteps=100, nFinalityDepth=20 => finalized boundary at 80
+//   0 ----------------------------- 80 | 81 ... 99 100 (TIP)
+//                                   ^
+//                                   |
+//                           finalized boundary (steps)
+//
+// If you later relax/disable the hard baton, these STEP-based guards become more important.
+
+consensus.nFinalityDepth           = 20;   // STEP-based finalized boundary (V1)
+consensus.nBlueFinalityDepth       = 20;   // STEP-based blue-depth limit (GhostDAG-light)
+consensus.nHistoryCommitmentDepth  = 20;   // history window used for commitments/analysis (aligned)
+
+// Reorg gating: new chain must lead by at least this many steps to be considered for reorg.
+// Rationale: reduce opportunistic “equal-progress” flaps.
+consensus.nMinReorgLead            = 1;
+
+// Work-penalty factor for deeper reorg attempts (requires overpayment in work).
+// Rationale: discourages short-term 51% style depth pushes without breaking convergence.
+consensus.nReorgPenaltyFactor      = 3;
+
+
+// ============================================================================
+// DAG / TIP SELECTION
+// ============================================================================
+
+// Enable GhostDAG tip selection logic (tie-breaks / strict-ready preference).
+consensus.fGhostDAGTipSelection    = true;
+
+// Consensus maximum number of DAG parents allowed/expected (DAGP).
+consensus.DAGParentNumber          = 8;
+
+
+// ============================================================================
+// FINALITY V2 — HEURISTIC ANTI-ATTACK (SOFT-VETO)
+// ============================================================================
+//
+// FinalityV2 produces a score: R_work + R_blue + R_DAC + R_algo.
+// If depth >= nFinalityV2MinDepthScore and score < dFinalityV2MinScore => SOFT-VETO (skip).
+//
+// IMPORTANT:
+// - V2 is NOT a consensus-invalid rule (except isolated-DAG hard reject when strict-ready).
+// - Keep MaxDepth aligned with the hard baton so behavior stays easy to reason about.
+
+consensus.nFinalityV2MaxDepth      = 20;   // beyond this depth, V2 does not apply (hard baton handles 21+)
+consensus.nFinalityV2MaxWindow     = 200;  // window size around fork for metrics (DAC/algo/work/blue)
+
+
+// ============================================================================
+// FINALITY V2 SCORE WEIGHTS
+// ============================================================================
+
+// Work contribution (log-compressed).
+consensus.dFinalityV2KWork         = 0.10;
+
+// Blue contribution (uses strict meta when available, otherwise soft “steps” factor).
+consensus.dFinalityV2KBlue         = 0.20;
+
+// Reserved unit (future use / normalization).
+consensus.dFinalityV2UnitWork      = 1.0;
+
+// DAG connectivity contribution (DAC ratio).
+consensus.dFinalityV2KDAC          = 2.0;
+consensus.nFinalityV2DACMinDepth   = 3;     // start DAC isolation suspicion from this depth
+consensus.dFinalityV2DACEps        = 1e-6;  // “connected enough” epsilon
+
+
+// ============================================================================
+// FINALITY V2: MULTI-ALGO DIVERGENCE (Jensen–Shannon Divergence)
+// ============================================================================
+//
+// JSD ∈ [0, ln(2)≈0.693]. Penalty is -KAlgo*JSD.
+// This stays relevant even at very high chain heights because it is computed on the local reorg window.
+
+consensus.dFinalityV2KAlgo         = 3.0;
+consensus.dFinalityV2AlgoEps       = 1e-3;
+
+
+// ============================================================================
+// FINALITY V2 SOFT-VETO THRESHOLDS
+// ============================================================================
+
+// Below this depth, V2 does not soft-veto (network churn / sync / short partitions).
+consensus.nFinalityV2MinDepthScore = 4;
+
+// Minimum score required to accept a deeper reorg candidate (soft-veto if below).
+consensus.dFinalityV2MinScore      = 0.08;
  ```
 
 ## Interpretation of parameters
