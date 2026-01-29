@@ -391,9 +391,9 @@ consensus.nReorgMicroBypassDepth   = 3;
 //
 // If you later relax/disable the hard baton, these STEP-based guards become more important.
 
-consensus.nFinalityDepth           = 20;   // STEP-based finalized boundary (V1)
-consensus.nBlueFinalityDepth       = 20;   // STEP-based blue-depth limit (GhostDAG-light)
-consensus.nHistoryCommitmentDepth  = 20;   // history window used for commitments/analysis (aligned)
+consensus.nFinalityDepth           = 10;   // STEP-based finalized boundary (V1)
+consensus.nBlueFinalityDepth       = 10;   // STEP-based blue-depth limit (GhostDAG-light)
+consensus.nHistoryCommitmentDepth  = 10;   // history window used for commitments/analysis (aligned)
 
 // Reorg gating: new chain must lead by at least this many steps to be considered for reorg.
 // Rationale: reduce opportunistic “equal-progress” flaps.
