@@ -383,8 +383,8 @@ consensus.nReorgMicroBypassDepth   = 3;
 // - Steps are monotone (+1 per selected-parent block), so they behave like “effective blocks”.
 //
 // Steps sketch (example):
-//   tipSteps=100, nFinalityDepth=20 => finalized boundary at 80
-//   0 ----------------------------- 80 | 81 ... 99 100 (TIP)
+//   tipSteps=100, nFinalityDepth=10 => finalized boundary at 80
+//   0 ----------------------------- 90 | 91 ... 99 100 (TIP)
 //                                   ^
 //                                   |
 //                           finalized boundary (steps)
@@ -398,7 +398,7 @@ consensus.nHistoryCommitmentDepth  = 10;   // history window used for commitment
 // Reorg gating: new chain must lead by at least this many steps to be considered for reorg.
 // Rationale: reduce opportunistic “equal-progress” flaps.
 // not used now
-consensus.nMinReorgLead            = 1;
+//consensus.nMinReorgLead            = 1;
 
 // Work-penalty factor for deeper reorg attempts (requires overpayment in work).
 // Rationale: discourages short-term 51% style depth pushes without breaking convergence.
