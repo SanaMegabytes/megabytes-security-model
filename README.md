@@ -417,6 +417,9 @@ consensus.fGhostDAGTipSelection    = true;
 // Consensus maximum number of DAG parents allowed/expected (DAGP).
 consensus.DAGParentNumber          = 8;
 
+// GhostDAG parameter: k (max blue set size / anticone tolerance).
+consensus.nGhostdagK = 6;
+
 
 // ============================================================================
 // FINALITY V2 — HEURISTIC ANTI-ATTACK (SOFT-VETO)
