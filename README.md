@@ -529,10 +529,9 @@ This provides **early practical finality** while preserving PoW decentralization
 | Reorg depth | V1 - V2 checks                 | Outcome                                   | Notes |
 |-------------|---------------------------|--------------------------------------------|-------|
 | MHIS          | Always evaluated (all depths)    | Reject if MHIS window not satisfied         | Prevents long-range or history-divergent chains |
-| d < 3       | No V2 veto                | Decided by PoW + Finality V1              | Honest reorg window |
-| 3 ≤ d < 5   | DAG isolation only        | Reject if isolated                         | Blocks private forks |
-| d ≥ 5       | Isolation + score checks  | Reject if isolated or Score < MinScore     | Requires strong attacker |
-| d ≥ 20      | Finality V1 work-lead rule          | Reject unless Work(new) ≥ Work(old) + 20      | Deep reorgs ≥20 blocks effectively impossible |
+| d < 3       | Micro-bypass (skip heuristics)               | Decided by PoW + basic rules              | Tolerates benign micro-reorgs (propagation races) |
+| 3 ≤ d < 20   | Finality V2 (isolation + score) + Finality V1 (steps)        | Reject if isolated / low-score / finalized                         | finalized V1 uses step-based guards (nFinalityDepth=10, nBlueFinalityDepth=10) |
+| d ≥ 20      | Hard reorg baton (nMaxReorgHeightHard=20)          | Reject (always)      | Deterministic, DB-independent ceiling |
 
 ---
 
