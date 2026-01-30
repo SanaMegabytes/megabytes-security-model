@@ -404,6 +404,8 @@ consensus.nMinReorgLead            = 1;
 // Rationale: discourages short-term 51% style depth pushes without breaking convergence.
 consensus.nReorgPenaltyFactor      = 3;
 
+//“The DAG soft mode is a safety fallback, not a normal operating mode.”
+consensus.blueSoftFactor = 0.50; // 50% blue ratio when DAG strict is not ready
 
 // ============================================================================
 // DAG / TIP SELECTION
